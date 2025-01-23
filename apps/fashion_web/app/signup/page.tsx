@@ -1,17 +1,51 @@
 'use client'
 
-import { useState } from 'react'
+import { ChangeEvent, useState } from 'react'
 import Link from 'next/link'
+import Loader from '../components/Loader'
+import { ApiService } from '../api/api'
+import axios from 'axios'
+import { useRouter } from 'next/navigation'
+
+interface IFormData {
+  name : string,
+  email : string,
+  password : string,
+}
 
 export default function Signup() {
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const [formData, setFormData] = useState<IFormData>({
+    name : "",
+    email : "",
+    password : ""
+  })
+  const [loading, setLoading] = useState<boolean>(false);
+  const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleChange = (e:ChangeEvent<HTMLInputElement>) => {
+    setFormData((prev)=> ({...prev , [e.target.name] : e.target.value}))
+  }
+  
+  const handleSubmit = async(e: React.FormEvent) => {
     e.preventDefault()
-    // Handle signup logic here
-    console.log('Signup attempt', { name, email, password })
+    setLoading(true);
+    const data = formData;
+    setFormData({name : "", email : "", password : ""});
+    try{
+      const responce = await ApiService.post("/signup", data);
+      window.showToast(responce.data.message, "SUCCESS", 2000);
+      localStorage.setItem("user" , JSON.stringify(responce.data.data));
+      localStorage.setItem("token" , JSON.stringify(responce.data.token));
+      router.push("/");
+    }catch(err){
+      if(axios.isAxiosError(err) && err.response){
+        console.log(err.response.data.message);
+        window.showToast(err.response.data.message, "ERROR", 3000);
+      }
+    }
+    setTimeout(()=>{
+      setLoading(false);
+    }, 1000);
   }
 
   return (
@@ -24,8 +58,9 @@ export default function Signup() {
             <input
               type="text"
               id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
               required
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
@@ -35,8 +70,9 @@ export default function Signup() {
             <input
               type="email"
               id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              name='email'
+              value={formData.email}
+              onChange={handleChange}
               required
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
@@ -46,14 +82,15 @@ export default function Signup() {
             <input
               type="password"
               id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              name='password'
+              value={formData.password}
+              onChange={handleChange}
               required
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
-          <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors">
-            Sign Up
+          <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors flex justify-center items-center">
+            {loading ? <Loader/> : "Signup"}
           </button>
         </form>
         <p className="mt-4 text-center">

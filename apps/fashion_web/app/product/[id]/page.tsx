@@ -1,8 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { Star, ShoppingCart, Heart } from 'lucide-react'
+import { ApiService } from '@/app/api/api';
+import Loader from '@/app/components/Loader';
 
 // Fix the type of params
 interface PageProps {
@@ -11,25 +13,47 @@ interface PageProps {
   };
 }
 
+interface IProductDetails {
+  _id: string,
+  title: string,
+  image: string | null,
+  description: string,
+  price: number,
+  rating: number,
+  review: number,
+  category: "MEN" | "WOMEN" | "ACCESSORIES",
+}
+
 export default function ProductDetail({ params }: PageProps) {
   const [quantity, setQuantity] = useState(1)
   const [isInWishlist, setIsInWishlist] = useState(false)
+  const [product, setProduct] = useState<IProductDetails>({
+    _id: "1",
+    title: "",
+    image: null,
+    description: "",
+    price: 0,
+    rating: 0,
+    review: 0,
+    category: "ACCESSORIES",
+  });
+  const [loading, setLoading] = useState<boolean>(false);
 
-  // This would typically come from an API call based on the product ID
-  const product = {
-    id: params.id,
-    name: 'Classic White T-Shirt',
-    price: 29.99,
-    description: 'A comfortable and versatile white t-shirt made from 100% organic cotton.',
-    image: '/placeholder.svg?height=600&width=600',
-    rating: 4.5,
-    reviews: 128,
-  }
+  const getProducts = async () => {
+    setLoading(true);
+    try {
+      const responce = await ApiService.get(`/product/${params.id}`);
+      if (responce && responce.data) {
+        setLoading(false);
+        setProduct(responce.data.data);
+      }
+      window.showToast(responce.data.message, "ERROR", 3000);
+      return null;
+    } catch (err) {
+      throw err;
+    }
+  };
 
-  useEffect(() => {
-    // Simulating checking if the product is in the wishlist
-    setIsInWishlist(Math.random() < 0.5)
-  }, [])
 
   const addToCart = () => {
     // Here you would typically add the item to the cart
@@ -42,20 +66,32 @@ export default function ProductDetail({ params }: PageProps) {
     console.log(isInWishlist ? 'Removed from wishlist' : 'Added to wishlist', product)
   }
 
+  useEffect(() => {
+    getProducts();
+  }, []);
+
+  if (loading) {
+    return (<>
+      <div className='w-screen h-screen flex justify-center items-center'>
+        <Loader />
+      </div>
+    </>)
+  }
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="grid md:grid-cols-2 gap-8">
         <div className="relative h-96 md:h-[600px]">
-          <Image
-            src={product.image}
-            alt={product.name}
+          {product.image && <Image
+            src={product?.image}
+            alt={product?.title}
             layout="fill"
             objectFit="cover"
             className="rounded-lg"
-          />
+          />}
         </div>
         <div className="space-y-4">
-          <h1 className="text-3xl font-bold">{product.name}</h1>
+          <h1 className="text-3xl font-bold">{product.title}</h1>
           <div className="flex items-center space-x-2">
             <div className="flex">
               {[...Array(5)].map((_, i) => (
@@ -66,7 +102,7 @@ export default function ProductDetail({ params }: PageProps) {
                 />
               ))}
             </div>
-            <span className="text-gray-600">({product.reviews} reviews)</span>
+            <span className="text-gray-600">({product.review} reviews)</span>
           </div>
           <p className="text-2xl font-bold">${product.price.toFixed(2)}</p>
           <p className="text-gray-600">{product.description}</p>

@@ -5,12 +5,14 @@ import express, { Request, Response } from "express";
 import ConnectToDB from "./config/db";
 import authRouter from "./routes/auth";
 import cors from 'cors';
+import productRoute from "./routes/product";
 
 //Initilaize configuration using env file
 
 // DB Connections
 const DB_STR = process.env.DB_STR as string;
 ConnectToDB(DB_STR);
+
 
 // Initial app
 const HOST = process.env.HOST || "0.0.0.0";
@@ -27,6 +29,7 @@ const NODE_ENV = process.env.NODE_ENV;
 
 // Rest API
 APP.use("/api", authRouter);
+APP.use("/api", productRoute);
 
 // Home Route
 APP.get("/", (req: Request, res: Response) => {
@@ -44,6 +47,7 @@ APP.get("/", (req: Request, res: Response) => {
 // Environment
 if (NODE_ENV === "development") {
   console.log(`
+        Task : Work on Update User API [x]
         Dev Server is Running on : http://localhost:${PORT}
         Host Server is Running on : http://${HOST}:${PORT}
     `);
