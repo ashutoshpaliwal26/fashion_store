@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { Search, ShoppingBag, User, X, ChevronDown, Heart } from 'lucide-react'
+import { ApiService } from '../api/api'
 
 interface CartItem {
   id: number
@@ -20,10 +21,11 @@ interface Product {
 const Header = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false)
-  const [isLoggedIn, setIsLoggedIn] = useState(true) // This should be controlled by your auth state
+  const [isLoggedIn, setIsLoggedIn] = useState(false) // This should be controlled by your auth state
   const [cartItems, setCartItems] = useState<CartItem[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<Product[]>([])
+  const dropDownRef = useRef<HTMLDivElement | null>(null);
 
   // Simulated product data
   const products: Product[] = [
@@ -33,25 +35,65 @@ const Header = () => {
     { id: 4, name: 'Sneakers', price: 89.99 },
   ]
 
+  const handleLogOut = ()=>{
+    localStorage.clear();
+    setIsLoggedIn(false);
+  }
+
   useEffect(() => {
     // Simulating fetching cart items from an API or local storage
+    const checkLogin = async() => {
+      const token = JSON.parse(localStorage.getItem("token") as string);
+      try{ 
+        const responce = await ApiService.get("/", {
+          headers : {
+            Authorization : `Bearear ${token}`
+          }
+        });
+        if(responce.data.success){
+          console.log(responce.data.success);
+          setIsLoggedIn(true);
+        }
+      }catch(err){
+        setIsLoggedIn(false);
+        throw err;
+      }
+    }
+
+    checkLogin();
+    
     setCartItems([
       { id: 1, name: 'Summer Dress', price: 59.99, quantity: 1 },
       { id: 2, name: 'Casual Shirt', price: 39.99, quantity: 2 },
-    ])
-  }, [])
+    ]);
+  }, [isLoggedIn])
 
   const handleSearch = (query: string) => {
     setSearchQuery(query)
     if (query.trim() === '') {
       setSearchResults([])
     } else {
-      const results = products.filter(product => 
+      const results = products.filter(product =>
         product.name.toLowerCase().includes(query.toLowerCase())
       )
       setSearchResults(results)
     }
   }
+
+  
+  useEffect(() => {
+    const handelClickOutSide:EventListener = (e) => {
+      if (dropDownRef.current && !dropDownRef.current.contains(e.target as Node)) {
+        setIsUserDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handelClickOutSide);
+
+    return(()=>{
+      document.removeEventListener("mousedown", handelClickOutSide);
+    })
+  }, [])
 
   return (
     <header className="bg-white shadow-sm">
@@ -66,14 +108,14 @@ const Header = () => {
           <Link href="/sale" className="text-gray-600 hover:text-gray-800">Sale</Link>
         </nav>
         <div className="flex items-center space-x-4">
-          <button 
+          <button
             className="text-gray-600 hover:text-gray-800"
             onClick={() => setIsSearchOpen(!isSearchOpen)}
           >
             {isSearchOpen ? <X size={20} /> : <Search size={20} />}
           </button>
           <div className="relative">
-            <button 
+            <button
               className="text-gray-600 hover:text-gray-800 flex items-center"
               onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
             >
@@ -81,7 +123,7 @@ const Header = () => {
               {isLoggedIn && <ChevronDown size={16} className="ml-1" />}
             </button>
             {isUserDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10">
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10" ref={dropDownRef}>
                 {isLoggedIn ? (
                   <>
                     <Link href="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profile</Link>
@@ -89,7 +131,7 @@ const Header = () => {
                     <Link href="/wishlist" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Wishlist</Link>
                     <Link href="/payment" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Payment Details</Link>
                     <Link href="/help" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Help</Link>
-                    <button onClick={() => setIsLoggedIn(false)} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Logout</button>
+                    <button onClick={handleLogOut} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Logout</button>
                   </>
                 ) : (
                   <>
@@ -125,8 +167,8 @@ const Header = () => {
           {searchResults.length > 0 && (
             <div className="mt-2 bg-white border rounded-md shadow-lg">
               {searchResults.map(product => (
-                <Link 
-                  key={product.id} 
+                <Link
+                  key={product.id}
                   href={`/product/${product.id}`}
                   className="block px-4 py-2 hover:bg-gray-100"
                 >

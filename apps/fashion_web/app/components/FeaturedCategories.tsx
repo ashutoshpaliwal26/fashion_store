@@ -2,9 +2,9 @@ import Image from 'next/image'
 import Link from 'next/link'
 
 const categories = [
-  { name: 'Women', image: '/placeholder.svg?height=400&width=300', link: '/women' },
-  { name: 'Men', image: '/placeholder.svg?height=400&width=300', link: '/men' },
-  { name: 'Accessories', image: '/placeholder.svg?height=400&width=300', link: '/accessories' },
+  { name: 'Women', image: 'https://res.cloudinary.com/djfi9rtlx/image/upload/v1688242348/box8_image_kwm9il.jpg', link: '/women' },
+  { name: 'Men', image: 'https://res.cloudinary.com/djfi9rtlx/image/upload/v1719735883/men-1.1be673ab928cc08bb100_qtarja.jpg', link: '/men' },
+  { name: 'Accessories', image: 'https://res.cloudinary.com/djfi9rtlx/image/upload/v1688242295/box2_image_spwimw.jpg', link: '/accessories' },
 ]
 
 const FeaturedCategories = () => {

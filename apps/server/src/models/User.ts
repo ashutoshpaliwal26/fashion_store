@@ -3,7 +3,9 @@ import mongoose from "mongoose"
 interface IUser {
     name : string,
     email : string,
-    password : string
+    password : string,
+    phoneNo : number,
+    address : string
 }
 
 const UserSchema = new mongoose.Schema<IUser>({
@@ -22,6 +24,14 @@ const UserSchema = new mongoose.Schema<IUser>({
         type : String,
         required : true,
     },
+    phoneNo : {
+        type : Number,
+        trim : true
+    },
+    address : {
+        type : String,
+        trim : true
+    }
 
 })
 

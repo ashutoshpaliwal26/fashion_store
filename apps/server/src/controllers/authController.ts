@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Request, response, Response } from "express";
 import User from "../models/User";
 import { IAuthenticationController } from "../types/appTypes";
 import AuthService from "../service/AuthService";
@@ -99,18 +99,84 @@ class AuthControllers implements IAuthenticationController {
     }
   }
 
-  public async updateUser(req: Request, res: Response) {
-    return res.json({
-      success: true,
-      message: "Update User Route",
-    });
+  public async updateUser(req: Request, res: Response): Promise<any> {
+    const { name, phoneNo, email, address } = req.body;
+    const { userId } = req.params;
+
+    if (!userId) {
+      return res.json({
+        success: false,
+        message: "UserId is Not Given",
+      });
+    }
+
+    try {
+      const updatedUser = await User.findByIdAndUpdate(
+        userId,
+        {
+          name: name,
+          email: email,
+          phoneNo: phoneNo,
+          address: address,
+        },
+        { new: true }
+      );
+
+      if (!updatedUser) {
+        return res.status(400).json({
+          success: false,
+          message: "Error in Update",
+        });
+      }
+
+      return res.status(200).json({
+        success: false,
+        message: "User Updated Successfully",
+        data: {
+          _id: updatedUser.id,
+          name: updatedUser.name,
+          email: updatedUser.email,
+          phoneNo: updatedUser.phoneNo,
+          address: updatedUser.address,
+        },
+      });
+    } catch (err) {
+      return res.json({
+        success: false,
+        message: (err as Error).message,
+      });
+    }
   }
 
-  public async deleteUser(req: Request, res: Response) {
-    return res.json({
-      success: true,
-      message: "Delete User Route",
-    });
+  public async deleteUser(req: Request, res: Response):Promise<any> {
+    try {
+      const { userId } = req.params;
+      if (!userId) {
+        return res.status(404).json({
+          success: false,
+          message: "Unautorized",
+        });
+      }
+
+      const deleteUser = await User.findByIdAndDelete(userId);
+
+      if (!deleteUser) {
+        return res.status(400).json({
+          success: false,
+          message: "Account is Not Deleted",
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: "Account Deleted Successfully",
+      });
+    } catch (err) {
+      return res.status(500).json({
+        success: false,
+        message: "Internal Server Error",
+      });
+    }
   }
 }
 
