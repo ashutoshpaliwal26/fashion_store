@@ -128,7 +128,7 @@ export default function CartPage() {
             {step === 3 && (
               <div className="text-center">
                 <h2 className="text-2xl font-semibold mb-4">Thank You for Your Order!</h2>
-                <p>Your order has been placed successfully. We'll send you an email with the order details shortly.</p>
+                <p>Your order has been placed successfully. We{"'"}ll send you an email with the order details shortly.</p>
               </div>
             )}
           </div>

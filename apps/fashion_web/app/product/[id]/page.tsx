@@ -4,7 +4,14 @@ import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { Star, ShoppingCart, Heart } from 'lucide-react'
 
-export default function ProductDetail({ params }: { params: { id: string } }) {
+// Fix the type of params
+interface PageProps {
+  params: {
+    id: string;
+  };
+}
+
+export default function ProductDetail({ params }: PageProps) {
   const [quantity, setQuantity] = useState(1)
   const [isInWishlist, setIsInWishlist] = useState(false)
 
@@ -79,18 +86,17 @@ export default function ProductDetail({ params }: { params: { id: string } }) {
                 +
               </button>
             </div>
-            <button 
+            <button
               onClick={addToCart}
               className="flex items-center space-x-2 bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors"
             >
               <ShoppingCart size={20} />
               <span>Add to Cart</span>
             </button>
-            <button 
+            <button
               onClick={toggleWishlist}
-              className={`p-2 border rounded-md transition-colors ${
-                isInWishlist ? 'bg-red-100 border-red-300' : 'hover:bg-gray-100'
-              }`}
+              className={`p-2 border rounded-md transition-colors ${isInWishlist ? 'bg-red-100 border-red-300' : 'hover:bg-gray-100'
+                }`}
             >
               <Heart size={20} className={isInWishlist ? 'text-red-500 fill-current' : ''} />
             </button>
@@ -100,4 +106,3 @@ export default function ProductDetail({ params }: { params: { id: string } }) {
     </div>
   )
 }
-

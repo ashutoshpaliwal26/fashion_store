@@ -8,7 +8,7 @@ export default function ReturnExchangePage() {
         <section>
           <h2 className="text-2xl font-semibold mb-4">Our Policy</h2>
           <p className="mb-4">
-            We want you to love your purchase, but if you're not completely satisfied, we're here to help.
+            We want you to love your purchase, but if you{"'"}re not completely satisfied, we{"'"}re here to help.
             You can return or exchange your item within 30 days of receipt.
           </p>
         </section>

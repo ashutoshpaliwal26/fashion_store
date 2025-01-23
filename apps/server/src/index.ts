@@ -1,32 +1,45 @@
+import dotenv from "dotenv";
+dotenv.config();
 // Import Packages
 import express, { Request, Response } from "express";
-import dotenv from "dotenv";
-import path from 'path'
+import ConnectToDB from "./config/db";
+import authRouter from "./routes/auth";
+import cors from 'cors';
 
 //Initilaize configuration using env file
-dotenv.config({path : path.resolve("../../.env")});
+
+// DB Connections
+const DB_STR = process.env.DB_STR as string;
+ConnectToDB(DB_STR);
 
 // Initial app
-const HOST = process.env.HOST;
+const HOST = process.env.HOST || "0.0.0.0";
 const PORT = parseInt(process.env.SERVER_PORT as string) || 8080;
-console.log(PORT);
+export const SEC = process.env.JWT_SEC as string;
 const APP = express();
 
+// Vaidators
+APP.use(express.json());
+APP.use(cors())
+
+
 const NODE_ENV = process.env.NODE_ENV;
-console.log(NODE_ENV);
+
+// Rest API
+APP.use("/api", authRouter);
 
 // Home Route
-APP.get("/", (req : Request, res:Response)=>{
-    res.json({
-        host : "Fashion Store",
-        repoUrl : "https://github.com/ashutoshpaliwal26/fashion-store",
-        ownedBy : "Ashutosh Paliwal",
-        licence : "MIT Licence",
-        type : "SERVER",
-        status : "RUNNING",
-        success : "TRUE",
-    })
-})
+APP.get("/", (req: Request, res: Response) => {
+  res.json({
+    host: "Fashion Store",
+    repoUrl: "https://github.com/ashutoshpaliwal26/fashion-store",
+    ownedBy: "Ashutosh Paliwal",
+    licence: "MIT Licence",
+    type: "SERVER",
+    status: "RUNNING",
+    success: "TRUE",
+  });
+});
 
 // Environment
 if (NODE_ENV === "development") {
