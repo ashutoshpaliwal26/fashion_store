@@ -17,10 +17,25 @@ export interface IAuthService{
 export interface IGetProduct {
     getAllProducts : (req:Request, res:Response) => Promise<any>;
     getProductById : (req:Request, res:Response) => Promise<any>;
+    getProductMen : (req:Request, res:Response) => Promise<any>;
+    getProductWomen : (req:Request, res:Response) => Promise<any>;
+    getProductAccessories : (req:Request, res:Response) => Promise<any>;
 }
 
 export interface ICreateProduct {
     createProduct : (req:Request, res:Response) => Promise<any>;
+}
+
+export interface IWhishList {
+    add : (req : Request, res:Response) => Promise<any>;
+    remove : (req:Request, res:Response) => Promise<any>;
+    getAll : (req:Request, res:Response) => Promise<any>;
+}
+
+export interface ICart {
+    add : (req : Request, res:Response) => Promise<any>;
+    remove : (req:Request, res:Response) => Promise<any>;
+    getAll : (req:Request, res:Response) => Promise<any>;
 }
 
 export type ProtectApi = (req:Request, res:Response, next:NextFunction) => Promise<any>;

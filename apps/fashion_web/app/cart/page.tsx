@@ -1,47 +1,95 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Image from 'next/image'
-import { Trash2, CreditCard, Smartphone, Truck } from 'lucide-react'
+import { Trash2 } from 'lucide-react'
+import { ApiService } from '../api/api'
+import { useRouter } from 'next/navigation'
 
 interface CartItem {
-  id: number
-  name: string
-  price: number
-  image: string
-  quantity: number
+  _id: string,
+  title: string,
+  image: string | null,
+  description: string,
+  price: number,
+  rating: number,
+  review: number,
+  category: "MEN" | "WOMEN" | "ACCESSORIES",
+  whisList: boolean,
+  cart: boolean,
+  qty: number
 }
 
 export default function CartPage() {
-  const [cartItems, setCartItems] = useState<CartItem[]>([
-    { id: 1, name: 'Summer Dress', price: 59.99, image: '/placeholder.svg?height=100&width=100', quantity: 1 },
-    { id: 2, name: 'Casual Shirt', price: 39.99, image: '/placeholder.svg?height=100&width=100', quantity: 2 },
-  ])
+  const [cartItems, setCartItems] = useState<CartItem[]>([])
+  const rouetr = useRouter();
 
-  const [paymentMethod, setPaymentMethod] = useState('card')
-  const [step, setStep] = useState(1)
-
-  const updateQuantity = (id: number, newQuantity: number) => {
-    setCartItems(cartItems.map(item => 
-      item.id === id ? { ...item, quantity: Math.max(1, newQuantity) } : item
+  const updateQuantity = (id: string, newQuantity: number) => {
+    setCartItems(cartItems.map(item =>
+      item._id === id ? { ...item, qty: Math.max(1, newQuantity) } : item
     ))
   }
 
-  const removeItem = (id: number) => {
-    setCartItems(cartItems.filter(item => item.id !== id))
+  const removeItem = async (id: string) => {
+    const user = JSON.parse(localStorage.getItem("user") as string);
+    const token = JSON.parse(localStorage.getItem("token") as string);
+
+    if (!user && !token) {
+      return
+    }
+
+    try {
+      const responce = await ApiService.put(`/product/remove/cart/${user._id}/${id}`, "", {
+        headers: {
+          Authorization: `Bearear ${token}`
+        }
+      });
+
+      if (responce && responce.data) {
+        setCartItems(responce.data.data.product);
+      }
+    } catch (err) {
+      throw err;
+    }
+
   }
 
-  const total = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
+  const total = cartItems.reduce((sum, item) => sum + item.price * item.qty, 0)
 
   const handleCheckout = () => {
-    setStep(2)
+    const checkOutProduct = {cartItems, total};
+    localStorage.setItem("cartItem", JSON.stringify(checkOutProduct));
+    rouetr.push("/payment");
   }
 
-  const handlePayment = () => {
-    // Here you would typically process the payment
-    console.log('Processing payment...')
-    setStep(3)
+
+  const getAllCartProduct = async () => {
+    const user = JSON.parse(localStorage.getItem("user") as string);
+    const token = JSON.parse(localStorage.getItem("token") as string);
+
+    if (!user && !token) {
+      return
+    }
+
+    try {
+      const responce = await ApiService.get(`/product/cart/${user._id}`, {
+        headers: {
+          Authorization: `Bearear ${token}`
+        }
+      });
+
+      if (responce && responce.data) {
+        setCartItems(responce.data.data.product);
+      }
+    } catch (err) {
+      throw err;
+    }
+
   }
+
+  useEffect(() => {
+    getAllCartProduct();
+  }, []);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -51,86 +99,34 @@ export default function CartPage() {
       ) : (
         <div className="grid md:grid-cols-3 gap-8">
           <div className="md:col-span-2 space-y-4">
-            {step === 1 && (
-              <>
-                {cartItems.map((item) => (
-                  <div key={item.id} className="flex items-center space-x-4 border-b pb-4">
-                    <Image src={item.image} alt={item.name} width={100} height={100} className="rounded-md" />
-                    <div className="flex-grow">
-                      <h3 className="font-semibold">{item.name}</h3>
-                      <p className="text-gray-600">${item.price.toFixed(2)}</p>
-                      <div className="flex items-center mt-2">
-                        <button 
-                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                          className="px-2 py-1 border rounded-l-md"
-                        >
-                          -
-                        </button>
-                        <span className="px-4 py-1 border-t border-b">{item.quantity}</span>
-                        <button 
-                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                          className="px-2 py-1 border rounded-r-md"
-                        >
-                          +
-                        </button>
-                      </div>
-                    </div>
-                    <button onClick={() => removeItem(item.id)} className="text-red-500">
-                      <Trash2 size={20} />
+
+            {cartItems.map((item) => (
+              <div key={item._id} className="flex items-center space-x-4 border-b pb-4">
+                {item.image && <Image src={item.image} alt={item.title} width={100} height={100} className="rounded-md" />}
+                <div className="flex-grow">
+                  <h3 className="font-semibold">{item.title}</h3>
+                  <p className="text-gray-600">${item.price.toFixed(2)}</p>
+                  <div className="flex items-center mt-2">
+                    <button
+                      onClick={() => updateQuantity(item._id, item.qty - 1)}
+                      className="px-2 py-1 border rounded-l-md"
+                    >
+                      -
+                    </button>
+                    <span className="px-4 py-1 border-t border-b">{item.qty}</span>
+                    <button
+                      onClick={() => updateQuantity(item._id, item.qty + 1)}
+                      className="px-2 py-1 border rounded-r-md"
+                    >
+                      +
                     </button>
                   </div>
-                ))}
-              </>
-            )}
-            {step === 2 && (
-              <div className="space-y-4">
-                <h2 className="text-xl font-semibold mb-4">Select Payment Method</h2>
-                <div className="space-y-2">
-                  <label className="flex items-center space-x-3 p-4 border rounded-md cursor-pointer transition-colors hover:bg-gray-50">
-                    <input
-                      type="radio"
-                      name="paymentMethod"
-                      value="card"
-                      checked={paymentMethod === 'card'}
-                      onChange={() => setPaymentMethod('card')}
-                      className="form-radio"
-                    />
-                    <CreditCard size={24} />
-                    <span>Credit/Debit Card</span>
-                  </label>
-                  <label className="flex items-center space-x-3 p-4 border rounded-md cursor-pointer transition-colors hover:bg-gray-50">
-                    <input
-                      type="radio"
-                      name="paymentMethod"
-                      value="upi"
-                      checked={paymentMethod === 'upi'}
-                      onChange={() => setPaymentMethod('upi')}
-                      className="form-radio"
-                    />
-                    <Smartphone size={24} />
-                    <span>UPI Payment</span>
-                  </label>
-                  <label className="flex items-center space-x-3 p-4 border rounded-md cursor-pointer transition-colors hover:bg-gray-50">
-                    <input
-                      type="radio"
-                      name="paymentMethod"
-                      value="cod"
-                      checked={paymentMethod === 'cod'}
-                      onChange={() => setPaymentMethod('cod')}
-                      className="form-radio"
-                    />
-                    <Truck size={24} />
-                    <span>Cash on Delivery</span>
-                  </label>
                 </div>
+                <button onClick={() => removeItem(item._id)} className="text-red-500">
+                  <Trash2 size={20} />
+                </button>
               </div>
-            )}
-            {step === 3 && (
-              <div className="text-center">
-                <h2 className="text-2xl font-semibold mb-4">Thank You for Your Order!</h2>
-                <p>Your order has been placed successfully. We{"'"}ll send you an email with the order details shortly.</p>
-              </div>
-            )}
+            ))}
           </div>
           <div className="md:col-span-1">
             <div className="bg-gray-100 p-6 rounded-lg">
@@ -147,22 +143,13 @@ export default function CartPage() {
                 <span>Total</span>
                 <span>${total.toFixed(2)}</span>
               </div>
-              {step === 1 && (
-                <button 
-                  onClick={handleCheckout}
-                  className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors mt-6"
-                >
-                  Proceed to Checkout
-                </button>
-              )}
-              {step === 2 && (
-                <button 
-                  onClick={handlePayment}
-                  className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors mt-6"
-                >
-                  Complete Payment
-                </button>
-              )}
+              <button
+                onClick={handleCheckout}
+                className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors mt-6"
+              >
+                Proceed to Checkout
+              </button>
+
             </div>
           </div>
         </div>

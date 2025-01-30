@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import e, { Request, Response } from "express";
 import { IGetProduct } from "../../types/appTypes";
 import Product from "../../models/Product";
 
@@ -29,6 +29,85 @@ class ProductController implements IGetProduct {
         });
       }
       const product = await Product.findById(productId);
+
+      if (!product) {
+        return res.status(404).json({
+          success: false,
+          message: "Invalid Product Id",
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        data: product,
+      });
+    } catch (err) {
+      return res.status(500).json({
+        success: false,
+        message: "Internal Serve Error",
+      });
+    }
+  }
+
+  public async getProductMen(req: Request, res: Response): Promise<any> {
+   
+    try {
+      const product = await Product.find({
+        category : "MEN"
+      }).limit(10);
+
+      if (!product) {
+        return res.status(404).json({
+          success: false,
+          message: "Invalid Product Id",
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        data: product,
+      });
+    } catch (err) {
+      return res.status(500).json({
+        success: false,
+        message: "Internal Serve Error",
+      });
+    }
+  }
+
+  public async getProductWomen(req: Request, res: Response): Promise<any> {
+    try {
+      const product = await Product.find({
+        category: "WOMEN",
+      }).limit(10);
+
+      if (!product) {
+        return res.status(404).json({
+          success: false,
+          message: "Invalid Product Id",
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        data: product,
+      });
+    } catch (err) {
+      return res.status(500).json({
+        success: false,
+        message: "Internal Serve Error",
+      });
+    }
+  }
+
+  public async getProductAccessories(
+    req: Request,
+    res: Response
+  ): Promise<any> {
+    try {
+      const product = await Product.find({
+        category: "ACCESSORIES",
+      }).limit(10);
 
       if (!product) {
         return res.status(404).json({

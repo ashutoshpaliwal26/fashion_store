@@ -31,7 +31,6 @@ const TrendingProducts = () => {
         setLoading(false);
         setProduct(responce.data.data);
       }
-      window.showToast(responce.data.message, "ERROR", 3000);
       return null;
     } catch (err) {
       throw err;

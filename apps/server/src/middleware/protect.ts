@@ -18,7 +18,6 @@ export async function protect(
   const token = header?.startsWith("Bearear") && header?.split(" ")[1];
   const payload = AuthService.getToken(token as string);
   const user = await User.findOne({ email: payload?.email });
-  console.log({user})
   if (!user) {
     return res.status(404).json({
       success: false,

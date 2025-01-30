@@ -14,8 +14,12 @@ class AuthService implements IAuthService {
     if (!payload) {
       return null;
     }
-
-    return jwt.sign(payload, this.secrete);
+    try {
+      return jwt.sign(payload, this.secrete);
+    } catch (err) {
+      console.log("JWT ERROR : ", (err as Error).message);
+      return null;
+    }
   }
 
   public getToken(token: string): any | null {
@@ -44,7 +48,6 @@ class AuthService implements IAuthService {
       return false;
     }
     try {
-        console.log({password, encrypted});
       if (await bcrypt.compare(password as string, encrypted as string))
         return true;
       else false;

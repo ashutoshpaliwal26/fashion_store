@@ -31,9 +31,9 @@ const UserSchema = new mongoose.Schema<IUser>({
     address : {
         type : String,
         trim : true
-    }
-
-})
+    },
+    
+});
 
 const User = mongoose.model<IUser>("User", UserSchema);
 export default User;

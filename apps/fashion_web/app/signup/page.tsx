@@ -5,7 +5,6 @@ import Link from 'next/link'
 import Loader from '../components/Loader'
 import { ApiService } from '../api/api'
 import axios from 'axios'
-import { useRouter } from 'next/navigation'
 
 interface IFormData {
   name : string,
@@ -20,7 +19,6 @@ export default function Signup() {
     password : ""
   })
   const [loading, setLoading] = useState<boolean>(false);
-  const router = useRouter();
 
   const handleChange = (e:ChangeEvent<HTMLInputElement>) => {
     setFormData((prev)=> ({...prev , [e.target.name] : e.target.value}))
@@ -36,7 +34,7 @@ export default function Signup() {
       window.showToast(responce.data.message, "SUCCESS", 2000);
       localStorage.setItem("user" , JSON.stringify(responce.data.data));
       localStorage.setItem("token" , JSON.stringify(responce.data.token));
-      router.push("/");
+      window.location.href = "/";
     }catch(err){
       if(axios.isAxiosError(err) && err.response){
         console.log(err.response.data.message);

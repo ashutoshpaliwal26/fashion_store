@@ -5,7 +5,6 @@ import AuthService from "../service/AuthService";
 
 class AuthControllers implements IAuthenticationController {
   async createUser(req: Request, res: Response): Promise<any> {
-    console.log(req.body);
     const { name, email, password } = req.body;
     if (!name || !email || !password) {
       return res.status(404).json({
@@ -88,9 +87,13 @@ class AuthControllers implements IAuthenticationController {
         }
         return res.status(400).json({
           success: false,
-          message: "User Not Found",
+          message: "Invalid Password",
         });
       }
+      return res.status(404).json({
+        success : false,
+        message : "User Not Found"
+      });
     } catch (err) {
       return res.status(500).json({
         success: false,

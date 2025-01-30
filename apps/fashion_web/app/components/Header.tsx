@@ -38,6 +38,7 @@ const Header = () => {
   const handleLogOut = ()=>{
     localStorage.clear();
     setIsLoggedIn(false);
+    window.location.href = "/";
   }
 
   useEffect(() => {
@@ -45,15 +46,19 @@ const Header = () => {
     const checkLogin = async() => {
       const token = JSON.parse(localStorage.getItem("token") as string);
       try{ 
-        const responce = await ApiService.get("/", {
-          headers : {
-            Authorization : `Bearear ${token}`
+        if(token){
+
+          const responce = await ApiService.get("/", {
+            headers : {
+              Authorization : `Bearear ${token}`
+            }
+          });
+          if(responce.data.success){
+            console.log(responce.data.success);
+            setIsLoggedIn(true);
           }
-        });
-        if(responce.data.success){
-          console.log(responce.data.success);
-          setIsLoggedIn(true);
         }
+        return;
       }catch(err){
         setIsLoggedIn(false);
         throw err;
@@ -105,7 +110,6 @@ const Header = () => {
           <Link href="/women" className="text-gray-600 hover:text-gray-800">Women</Link>
           <Link href="/men" className="text-gray-600 hover:text-gray-800">Men</Link>
           <Link href="/accessories" className="text-gray-600 hover:text-gray-800">Accessories</Link>
-          <Link href="/sale" className="text-gray-600 hover:text-gray-800">Sale</Link>
         </nav>
         <div className="flex items-center space-x-4">
           <button

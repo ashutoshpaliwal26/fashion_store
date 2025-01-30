@@ -1,16 +1,17 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, use } from 'react'
 import Image from 'next/image'
 import { Star, ShoppingCart, Heart } from 'lucide-react'
 import { ApiService } from '@/app/api/api';
 import Loader from '@/app/components/Loader';
+import { useRouter } from 'next/navigation';
 
 // Fix the type of params
 interface PageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 interface IProductDetails {
@@ -22,6 +23,9 @@ interface IProductDetails {
   rating: number,
   review: number,
   category: "MEN" | "WOMEN" | "ACCESSORIES",
+  whisList: boolean,
+  cart: boolean,
+  qty : number,
 }
 
 export default function ProductDetail({ params }: PageProps) {
@@ -36,18 +40,28 @@ export default function ProductDetail({ params }: PageProps) {
     rating: 0,
     review: 0,
     category: "ACCESSORIES",
+    cart: false,
+    whisList: false,
+    qty : 1
   });
   const [loading, setLoading] = useState<boolean>(false);
+  const [whisListLoading, setWishlistLoading] = useState<boolean>(false);
+  const [cartLoading, setCartLoading] = useState<boolean>(false);
+  const resolveParama = use(params);
+  const router = useRouter();
 
   const getProducts = async () => {
+    const i = cartLoading;
+    console.log(i);
+    
     setLoading(true);
     try {
-      const responce = await ApiService.get(`/product/${params.id}`);
+      const responce = await ApiService.get(`/product/${resolveParama.id}`);
       if (responce && responce.data) {
         setLoading(false);
         setProduct(responce.data.data);
+        setIsInWishlist(product.whisList);
       }
-      window.showToast(responce.data.message, "ERROR", 3000);
       return null;
     } catch (err) {
       throw err;
@@ -55,15 +69,78 @@ export default function ProductDetail({ params }: PageProps) {
   };
 
 
-  const addToCart = () => {
-    // Here you would typically add the item to the cart
-    console.log('Added to cart:', { ...product, quantity })
+  const addToCart = async() => {
+    setCartLoading(true);
+    const user = JSON.parse(localStorage.getItem("user") as string);
+    const token = JSON.parse(localStorage.getItem("token") as string);
+    if (!token && !user) {
+      router.push("/login");
+      return;
+    }
+    const userId = user._id;
+    const productId = resolveParama.id;
+    try {
+      const responce = await ApiService.put(`/product/add/cart/${userId}/${productId}`, "", {
+        headers: {
+          Authorization: `Bearear ${token}`
+        }
+      });
+      if(responce && responce.data.success){
+        window.showToast("Add to Cart Successfully", "SUCCESS", 3000);
+      }
+      else{
+        window.showToast("Error in Adding to Cart", "ERROR", 3000);
+      }
+    } catch (err) {
+      window.showToast((err as Error).message, "ERROR", 3000);
+      throw err;
+    }
+    setCartLoading(false);
   }
 
-  const toggleWishlist = () => {
-    setIsInWishlist(!isInWishlist)
-    // Here you would typically update the wishlist in your backend or local storage
-    console.log(isInWishlist ? 'Removed from wishlist' : 'Added to wishlist', product)
+  const removeToWatchList = async () => {
+    const user = JSON.parse(localStorage.getItem("user") as string);
+    const token = JSON.parse(localStorage.getItem("token") as string);
+    if (!token && !user) {
+      router.push("/login");
+      return;
+    }
+    const userId = user._id;
+    const productId = resolveParama.id;
+    try {
+      await ApiService.put(`/product/remove/whislist/${userId}/${productId}`, "", {
+        headers: {
+          Authorization: `Bearear ${token}`
+        }
+      });
+      setIsInWishlist(false);
+    } catch (err) {
+      throw err;
+    }
+  };
+
+  const addToWatchList = async () => {
+    setWishlistLoading(true);
+    const user = JSON.parse(localStorage.getItem("user") as string);
+    const token = JSON.parse(localStorage.getItem("token") as string);
+    if (!token && !user) {
+      router.push("/login");
+      return;
+    }
+    const userId = user._id;
+    const productId = resolveParama.id;
+    try {
+      const responce = await ApiService.put(`/product/add/whislist/${userId}/${productId}`, "", {
+        headers: {
+          Authorization: `Bearear ${token}`
+        }
+      });
+      const getProduct: IProductDetails[] = responce.data.data.product;
+      getProduct.filter((product) => setIsInWishlist(product.whisList));
+    } catch (err) {
+      throw err;
+    }
+    setWishlistLoading(false);
   }
 
   useEffect(() => {
@@ -129,13 +206,22 @@ export default function ProductDetail({ params }: PageProps) {
               <ShoppingCart size={20} />
               <span>Add to Cart</span>
             </button>
-            <button
-              onClick={toggleWishlist}
-              className={`p-2 border rounded-md transition-colors ${isInWishlist ? 'bg-red-100 border-red-300' : 'hover:bg-gray-100'
+            {isInWishlist ? <button
+              onClick={removeToWatchList}
+              className={`flex justify-center items-center p-2 border rounded-md transition-colors bg-red-100 border-red-300`}
+            >
+              {
+                whisListLoading ? <Loader /> : <Heart size={20} className={'text-red-500 fill-current'} />
+              }
+            </button> : <button
+              onClick={addToWatchList}
+              className={`flex justify-center items-center p-2 border rounded-md transition-colors ${isInWishlist ? 'bg-red-100 border-red-300' : 'hover:bg-gray-100'
                 }`}
             >
-              <Heart size={20} className={isInWishlist ? 'text-red-500 fill-current' : ''} />
-            </button>
+              {
+                whisListLoading ? <Loader /> : <Heart size={20} />
+              }
+            </button>}
           </div>
         </div>
       </div>

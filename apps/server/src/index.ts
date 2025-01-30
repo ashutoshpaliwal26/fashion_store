@@ -24,7 +24,6 @@ const APP = express();
 APP.use(express.json());
 APP.use(cors())
 
-
 const NODE_ENV = process.env.NODE_ENV;
 
 // Rest API

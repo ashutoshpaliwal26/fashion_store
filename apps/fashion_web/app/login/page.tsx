@@ -3,7 +3,6 @@
 import { ChangeEvent, useState } from 'react'
 import Link from 'next/link'
 import { ApiService } from '../api/api'
-import { useRouter } from 'next/navigation'
 import axios from 'axios'
 import Loader from '../components/Loader'
 
@@ -18,7 +17,6 @@ export default function Login() {
     password : ""
   })
   const [loading, setLoading] = useState<boolean>(false);
-  const router = useRouter();
 
   const handleChange = (e:ChangeEvent<HTMLInputElement>) => {
     setFormData((prev)=>({...prev, [e.target.name] : e.target.value}));
@@ -35,7 +33,7 @@ export default function Login() {
         window.showToast(responce.data.message, "SUCCESS", 2000);
         localStorage.setItem("user", JSON.stringify(responce.data.data));
         localStorage.setItem("token", JSON.stringify(responce.data.token));
-        router.push("/");
+        window.location.href = "/";
         setLoading(false);
       }
     }catch(err){

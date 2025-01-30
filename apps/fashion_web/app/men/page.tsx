@@ -1,18 +1,43 @@
+'use client'
+import { useEffect, useState } from 'react';
 import ProductGrid from '../components/ProductGrid'
+import { ApiService } from '../api/api';
 
-const menProducts = [
-  { id: 1, name: 'Casual Shirt', price: 49.99, image: '/placeholder.svg?height=400&width=300' },
-  { id: 2, name: 'Slim Fit Jeans', price: 69.99, image: '/placeholder.svg?height=400&width=300' },
-  { id: 3, name: 'Leather Jacket', price: 129.99, image: '/placeholder.svg?height=400&width=300' },
-  { id: 4, name: 'Sneakers', price: 79.99, image: '/placeholder.svg?height=400&width=300' },
-  // Add more products as needed
-]
+interface IProductDetails {
+  _id: string,
+  title: string,
+  image: string | null,
+  description: string,
+  price: number,
+  rating: number,
+  review: number,
+  category: "MEN" | "WOMEN" | "ACCESSORIES",
+  whisList: boolean,
+  cart: boolean,
+}
 
 export default function MenPage() {
+  const [menProduct, setMenProduct] = useState<IProductDetails[]>([]);
+  
+  const fetchMenProduct = async() => {
+    try{
+      const responce = await ApiService.get("/product/men");
+      if(responce && responce.data){
+        setMenProduct(responce.data.data);
+      }
+    }catch(err){
+      throw err;
+    }
+  };
+
+  useEffect(()=>{
+    fetchMenProduct();
+  },[]);
+
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">Men{"'"}s Collection</h1>
-      <ProductGrid products={menProducts} />
+      <ProductGrid products={menProduct} />
     </div>
   )
 }
